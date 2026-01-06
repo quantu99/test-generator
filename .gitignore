@@ -1,0 +1,10 @@
+# Tạo file .gitignore
+cat > .gitignore << EOF
+node_modules/
+dist/
+*.log
+.DS_Store
+.env
+coverage/
+.vscode/
+EOF
