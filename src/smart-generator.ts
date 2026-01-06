@@ -6,15 +6,16 @@ import {
   ErrorInfo,
   FlowAnalysis,
 } from './flow-analyzer';
-import * as fs from 'fs';
-import { generateFunctionCall as genFuncCall, generateFunctionArgs, generateMockValueForType } from './generator';
+import { generateFunctionCall, generateFunctionArgs, generateMockValueForType } from './generator';
 
+/**
+ * Generate smart tests based on source code (pass source code directly)
+ */
 export function generateSmartTests(
-  filePath: string,
+  sourceCode: string,
   func: FunctionInfo,
   framework: string = 'jest',
 ): string {
-  const sourceCode = fs.readFileSync(filePath, 'utf-8');
   const flowAnalysis = analyzeBusinessFlow(sourceCode, func.name);
 
   let tests = '';
@@ -31,7 +32,8 @@ export function generateSmartTests(
     tests += `  beforeEach(() => {\n`;
     flowAnalysis.externalCalls.forEach((call) => {
       const mockFn = framework === 'vitest' ? 'vi.fn()' : 'jest.fn()';
-      tests += `    ${call.functionName} = ${mockFn};\n`;
+      tests += `    // Mock ${call.functionName}\n`;
+      tests += `    // ${call.functionName} = ${mockFn};\n`;
     });
     tests += `  });\n\n`;
   }
@@ -83,10 +85,17 @@ function generateErrorTest(
     error.errorMessage || 'invalid input'
   }', ${asyncPrefix}() => {\n`;
   test += `    // Arrange: Setup invalid input that triggers error on line ${error.line}\n`;
-  test += `    const invalidInput = {}; // TODO: Specify invalid data\n\n`;
-  test += `    // Act & Assert\n`;
+  
+  // Generate mock invalid inputs
+  func.params.forEach(param => {
+    test += `    const ${param.name} = null; // Invalid input\n`;
+  });
+  
+  test += `\n    // Act & Assert\n`;
 
-  const functionCall = genFuncCall(func, 'invalidInput', '');
+  const args = generateFunctionArgs(func.params);
+  const functionCall = generateFunctionCall(func, args, '');
+  
   if (func.isAsync) {
     test += `    await expect(${functionCall}).rejects.toThrow('${error.errorMessage || ''}');\n`;
   } else {
@@ -111,10 +120,18 @@ function generateConditionTests(
   // Test true branch
   tests += `  it('should handle case when ${condition.condition} is true (line ${condition.line})', ${asyncPrefix}() => {\n`;
   tests += `    // Arrange: Setup data that makes condition true\n`;
-  tests += `    const input = {}; // TODO: Make ${condition.condition} = true\n\n`;
+  
+  func.params.forEach(param => {
+    const mockValue = generateMockValueForType(param.type);
+    tests += `    const ${param.name} = ${mockValue};\n`;
+  });
+  
+  tests += `    // TODO: Adjust values to make ${condition.condition} = true\n\n`;
   tests += `    // Act\n`;
-  const functionCall1 = genFuncCall(func, 'input', awaitPrefix);
-  tests += `    const result = ${functionCall1};\n\n`;
+  
+  const args = generateFunctionArgs(func.params);
+  const functionCall = generateFunctionCall(func, args, awaitPrefix);
+  tests += `    const result = ${functionCall};\n\n`;
   tests += `    // Assert: Verify consequence branch executed\n`;
   tests += `    expect(result).toBeDefined();\n`;
   tests += `    // TODO: Verify specific behavior from consequence\n`;
@@ -124,9 +141,16 @@ function generateConditionTests(
   if (condition.alternative) {
     tests += `  it('should handle case when ${condition.condition} is false (line ${condition.line})', ${asyncPrefix}() => {\n`;
     tests += `    // Arrange: Setup data that makes condition false\n`;
-    tests += `    const input = {}; // TODO: Make ${condition.condition} = false\n\n`;
+    
+    func.params.forEach(param => {
+      const mockValue = generateMockValueForType(param.type);
+      tests += `    const ${param.name} = ${mockValue};\n`;
+    });
+    
+    tests += `    // TODO: Adjust values to make ${condition.condition} = false\n\n`;
     tests += `    // Act\n`;
-    const functionCall2 = genFuncCall(func, 'input', awaitPrefix);
+    
+    const functionCall2 = generateFunctionCall(func, args, awaitPrefix);
     tests += `    const result = ${functionCall2};\n\n`;
     tests += `    // Assert: Verify alternative branch executed\n`;
     tests += `    expect(result).toBeDefined();\n`;
@@ -150,10 +174,20 @@ function generateLoopTests(
   // Test with empty array
   tests += `  it('should handle empty array/collection', ${asyncPrefix}() => {\n`;
   tests += `    // Arrange: Setup with empty array\n`;
-  tests += `    const emptyInput = { items: [] };\n\n`;
-  tests += `    // Act\n`;
-  const functionCall3 = genFuncCall(func, 'emptyInput', awaitPrefix);
-  tests += `    const result = ${functionCall3};\n\n`;
+  
+  func.params.forEach(param => {
+    if (param.type.baseType.toLowerCase().includes('array')) {
+      tests += `    const ${param.name} = [];\n`;
+    } else {
+      const mockValue = generateMockValueForType(param.type);
+      tests += `    const ${param.name} = ${mockValue};\n`;
+    }
+  });
+  
+  tests += `\n    // Act\n`;
+  const args = generateFunctionArgs(func.params);
+  const functionCall = generateFunctionCall(func, args, awaitPrefix);
+  tests += `    const result = ${functionCall};\n\n`;
   tests += `    // Assert\n`;
   tests += `    expect(result).toBeDefined();\n`;
   tests += `  });\n\n`;
@@ -161,10 +195,19 @@ function generateLoopTests(
   // Test with multiple items
   tests += `  it('should iterate correctly over multiple items', ${asyncPrefix}() => {\n`;
   tests += `    // Arrange: Setup with array of items\n`;
-  tests += `    const input = { items: [{}, {}, {}] }; // TODO: Specify item structure\n\n`;
-  tests += `    // Act\n`;
-  const functionCall4 = genFuncCall(func, 'input', awaitPrefix);
-  tests += `    const result = ${functionCall4};\n\n`;
+  
+  func.params.forEach(param => {
+    if (param.type.baseType.toLowerCase().includes('array')) {
+      tests += `    const ${param.name} = [{}, {}, {}]; // TODO: Specify item structure\n`;
+    } else {
+      const mockValue = generateMockValueForType(param.type);
+      tests += `    const ${param.name} = ${mockValue};\n`;
+    }
+  });
+  
+  tests += `\n    // Act\n`;
+  const functionCall2 = generateFunctionCall(func, args, awaitPrefix);
+  tests += `    const result = ${functionCall2};\n\n`;
   tests += `    // Assert: Verify all items processed\n`;
   tests += `    expect(result).toBeDefined();\n`;
   tests += `  });\n\n`;
@@ -183,7 +226,11 @@ function generateExternalCallTest(
 
   let test = `  it('should call ${call.functionName} with correct arguments (line ${call.line})', ${asyncPrefix}() => {\n`;
   test += `    // Arrange\n`;
-  test += `    const input = {}; // TODO: Setup input\n`;
+  
+  func.params.forEach(param => {
+    const mockValue = generateMockValueForType(param.type);
+    test += `    const ${param.name} = ${mockValue};\n`;
+  });
 
   if (call.isAsync) {
     test += `    ${call.functionName}.mockResolvedValue({});\n\n`;
@@ -192,11 +239,12 @@ function generateExternalCallTest(
   }
 
   test += `    // Act\n`;
-  const functionCall5 = genFuncCall(func, 'input', awaitPrefix);
-  test += `    ${functionCall5};\n\n`;
+  const args = generateFunctionArgs(func.params);
+  const functionCall = generateFunctionCall(func, args, awaitPrefix);
+  test += `    ${functionCall};\n\n`;
   test += `    // Assert: Verify external call\n`;
   test += `    expect(${call.functionName}).toHaveBeenCalled();\n`;
-  test += `    expect(${call.functionName}).toHaveBeenCalledWith(/* expected args */);\n`;
+  test += `    // TODO: Add specific argument assertions\n`;
   test += `  });\n\n`;
 
   return test;
@@ -217,30 +265,38 @@ function generateHappyPathTest(
   if (flow.conditions.length > 0) {
     test += `    // Make sure: ${flow.conditions
       .map((c) => c.condition)
+      .slice(0, 3)
       .join(', ')}\n`;
   }
 
-  test += `    const validInput = {}; // TODO: Setup valid data\n\n`;
+  func.params.forEach(param => {
+    const mockValue = generateMockValueForType(param.type);
+    test += `    const ${param.name} = ${mockValue};\n`;
+  });
 
   // Mock external calls
   if (flow.externalCalls.length > 0) {
-    test += `    // Mock external dependencies\n`;
+    test += `\n    // Mock external dependencies\n`;
     flow.externalCalls.forEach((call) => {
-      test += `    ${call.functionName}.mockReturnValue({});\n`;
+      if (call.isAsync) {
+        test += `    ${call.functionName}.mockResolvedValue({});\n`;
+      } else {
+        test += `    ${call.functionName}.mockReturnValue({});\n`;
+      }
     });
-    test += '\n';
   }
 
-  test += `    // Act\n`;
-  const functionCall6 = genFuncCall(func, 'validInput', awaitPrefix);
-  test += `    const result = ${functionCall6};\n\n`;
+  test += `\n    // Act\n`;
+  const args = generateFunctionArgs(func.params);
+  const functionCall = generateFunctionCall(func, args, awaitPrefix);
+  test += `    const result = ${functionCall};\n\n`;
   test += `    // Assert\n`;
   test += `    expect(result).toBeDefined();\n`;
 
   // Add return value checks
   if (flow.returnStatements.length > 0) {
     const returnTypes = [...new Set(flow.returnStatements.map((r) => r.type))];
-    test += `    // Possible return types: ${returnTypes.join(', ')}\n`;
+    test += `    // Expected return types: ${returnTypes.join(' | ')}\n`;
   }
 
   test += `  });\n\n`;
@@ -256,19 +312,28 @@ function generateComplexityTest(
   test += `    // This function has high complexity (${flow.complexity})\n`;
   test += `    // Consider testing combinations of:\n`;
 
-  flow.conditions.forEach((c, i) => {
+  flow.conditions.slice(0, 5).forEach((c, i) => {
     test += `    // - Condition ${i + 1}: ${c.condition}\n`;
   });
 
+  if (flow.conditions.length > 5) {
+    test += `    // - ... and ${flow.conditions.length - 5} more conditions\n`;
+  }
+
+  test += `    \n`;
   test += `    // TODO: Create comprehensive test covering edge cases\n`;
+  test += `    // Consider using test.each() for multiple scenarios\n`;
   test += `  });\n\n`;
 
   return test;
 }
 
-// Update main generator to use smart generation
+/**
+ * Main entry point: Generate test with flow analysis
+ * FIXED: Pass sourceCode instead of re-reading file
+ */
 export function generateTestWithFlow(
-  filePath: string,
+  sourceCode: string,
   func: FunctionInfo,
   config: TestConfig,
 ): string {
@@ -278,7 +343,7 @@ export function generateTestWithFlow(
   testCode += generateImports(func, config.framework);
 
   // Generate smart tests based on business flow
-  testCode += generateSmartTests(filePath, func, config.framework);
+  testCode += generateSmartTests(sourceCode, func, config.framework);
 
   return testCode;
 }
@@ -289,6 +354,8 @@ function generateImports(func: FunctionInfo, framework: string): string {
   // Import the function/class
   if (func.className) {
     imports += `import { ${func.className} } from './${func.className.toLowerCase()}';\n`;
+  } else if (func.isDefaultExport) {
+    imports += `import ${func.name} from './${func.name}';\n`;
   } else {
     imports += `import { ${func.name} } from './${func.name}';\n`;
   }

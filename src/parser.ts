@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { FunctionInfo, ParamInfo, TypeInfo } from './types';
 import { TypeResolver } from './type-resolver';
+import { getSimilarFiles } from './config-loader';
 
 let typeResolver: TypeResolver | null = null;
 
@@ -25,15 +26,45 @@ export function parseFile(filePath: string): FunctionInfo[] {
     throw new ParseError('Invalid file path provided', filePath || 'unknown');
   }
 
-  // Check if file exists
+  // Check if file exists with better error message
   if (!fs.existsSync(filePath)) {
-    throw new ParseError(`File not found: ${filePath}`, filePath);
+    const similarFiles = getSimilarFiles(filePath);
+    const suggestion = similarFiles.length > 0
+      ? `\n\n💡 Did you mean one of these?\n${similarFiles.map(f => `   - ${f}`).join('\n')}`
+      : '\n\n💡 Check the file path and try again.';
+    
+    throw new ParseError(
+      `File not found: ${filePath}${suggestion}`,
+      filePath
+    );
   }
 
   // Check if it's a file (not directory)
-  const stats = fs.statSync(filePath);
+  let stats;
+  try {
+    stats = fs.statSync(filePath);
+  } catch (error: any) {
+    throw new ParseError(
+      `Cannot access file: ${error.message}`,
+      filePath
+    );
+  }
+
   if (!stats.isFile()) {
-    throw new ParseError(`Path is not a file: ${filePath}`, filePath);
+    throw new ParseError(
+      `Path is not a file: ${filePath}\n\n💡 Please provide a path to a file, not a directory.`,
+      filePath
+    );
+  }
+
+  // Check file extension
+  const ext = path.extname(filePath).toLowerCase();
+  const validExtensions = ['.ts', '.tsx', '.js', '.jsx'];
+  if (!validExtensions.includes(ext)) {
+    throw new ParseError(
+      `Unsupported file extension: ${ext}\n\n💡 Supported extensions: ${validExtensions.join(', ')}`,
+      filePath
+    );
   }
 
   let sourceCode: string;
@@ -66,118 +97,159 @@ export function parseFile(filePath: string): FunctionInfo[] {
     );
   }
 
-  // Check for syntax errors
-  const diagnostics = ts.getPreEmitDiagnostics(
-    ts.createProgram([filePath], {})
-  );
-  const errors = diagnostics.filter(d => d.category === ts.DiagnosticCategory.Error);
-  if (errors.length > 0) {
-    const errorMessages = errors
-      .map(e => {
+  // Check for syntax errors with better messages
+  try {
+    const program = ts.createProgram([filePath], {
+      noEmit: true,
+      skipLibCheck: true,
+    });
+    const diagnostics = ts.getPreEmitDiagnostics(program);
+    const errors = diagnostics.filter(d => d.category === ts.DiagnosticCategory.Error);
+    
+    if (errors.length > 0) {
+      const errorMessages = errors.slice(0, 3).map(e => {
         const message = ts.flattenDiagnosticMessageText(e.messageText, '\n');
         if (e.file && e.start !== undefined) {
           const { line, character } = e.file.getLineAndCharacterOfPosition(e.start);
-          return `Line ${line + 1}, Column ${character + 1}: ${message}`;
+          return `  Line ${line + 1}, Col ${character + 1}: ${message}`;
         }
-        return message;
-      })
-      .join('\n');
-    
-    throw new ParseError(
-      `TypeScript syntax errors found:\n${errorMessages}`,
-      filePath
-    );
+        return `  ${message}`;
+      }).join('\n');
+      
+      const moreErrors = errors.length > 3 ? `\n  ... and ${errors.length - 3} more errors` : '';
+      
+      throw new ParseError(
+        `TypeScript syntax errors found:\n${errorMessages}${moreErrors}\n\n💡 Fix syntax errors and try again.`,
+        filePath
+      );
+    }
+  } catch (error: any) {
+    if (error instanceof ParseError) {
+      throw error;
+    }
+    // If type checking fails, continue with parsing
+    if (process.env.DEBUG) {
+      console.warn('⚠️  Type checking failed, continuing with parsing:', error.message);
+    }
   }
 
-  // Initialize type resolver
+  // Initialize type resolver with cleanup
+  let shouldDisposeResolver = false;
   try {
-    const projectRoot = findProjectRoot(filePath);
-    typeResolver = new TypeResolver(projectRoot);
+    if (!typeResolver || typeResolver.isDisposed()) {
+      const projectRoot = findProjectRoot(filePath);
+      typeResolver = new TypeResolver(projectRoot);
+      shouldDisposeResolver = true;
+    }
   } catch (error: any) {
-    // Type resolution is optional, continue without it
+    if (process.env.DEBUG) {
+      console.warn('⚠️  Type resolution disabled:', error.message);
+    }
     typeResolver = null;
   }
 
   const functions: FunctionInfo[] = [];
 
-  function visit(node: ts.Node, className?: string) {
-    // 1. Function declarations
-    if (ts.isFunctionDeclaration(node)) {
-      const func = extractFunctionInfo(node, 'function', className, sourceFile);
-      if (func) functions.push(func);
-    }
-    
-    // 2. Arrow functions as const/let/var
-    if (ts.isVariableStatement(node)) {
-      node.declarationList.declarations.forEach(decl => {
-        if (decl.initializer && ts.isArrowFunction(decl.initializer)) {
-          const func = extractArrowFunctionInfo(decl, node, sourceFile);
-          if (func) functions.push(func);
-        }
-        // Function expression: const foo = function() {}
-        if (decl.initializer && ts.isFunctionExpression(decl.initializer)) {
-          const func = extractFunctionExpressionInfo(decl, node, sourceFile);
-          if (func) functions.push(func);
-        }
-      });
-    }
-
-    // 3. Object methods: const obj = { method() {} }
-    if (ts.isVariableStatement(node)) {
-      node.declarationList.declarations.forEach(decl => {
-        if (decl.initializer && ts.isObjectLiteralExpression(decl.initializer)) {
-          const objName = decl.name.getText();
-          decl.initializer.properties.forEach(prop => {
-            if (ts.isMethodDeclaration(prop) || ts.isPropertyAssignment(prop)) {
-              const func = extractObjectMethodInfo(prop, objName, node, sourceFile);
-              if (func) functions.push(func);
-            }
-          });
-        }
-      });
-    }
-
-    // 4. Class methods (including private/protected, static, getter/setter)
-    if (ts.isClassDeclaration(node)) {
-      const currentClassName = node.name?.getText() || 'Anonymous';
-      node.members.forEach(member => {
-        if (ts.isMethodDeclaration(member) || ts.isConstructorDeclaration(member)) {
-          const func = extractMethodInfo(member, currentClassName, sourceFile);
-          if (func) functions.push(func);
-        } else if (ts.isGetAccessorDeclaration(member)) {
-          const func = extractGetterInfo(member, currentClassName, sourceFile);
-          if (func) functions.push(func);
-        } else if (ts.isSetAccessorDeclaration(member)) {
-          const func = extractSetterInfo(member, currentClassName, sourceFile);
-          if (func) functions.push(func);
-        }
-      });
-    }
-
-    // 5. Export default function
-    if (ts.isExportAssignment(node)) {
-      if (ts.isFunctionExpression(node.expression)) {
-        const func = extractDefaultExportFunction(node.expression, sourceFile);
-        if (func) functions.push(func);
-      } else if (ts.isArrowFunction(node.expression)) {
-        const func = extractDefaultExportArrowFunction(node.expression, sourceFile);
+  try {
+    function visit(node: ts.Node, className?: string) {
+      // 1. Function declarations
+      if (ts.isFunctionDeclaration(node)) {
+        const func = extractFunctionInfo(node, 'function', className, sourceFile);
         if (func) functions.push(func);
       }
+      
+      // 2. Arrow functions as const/let/var
+      if (ts.isVariableStatement(node)) {
+        node.declarationList.declarations.forEach(decl => {
+          if (decl.initializer && ts.isArrowFunction(decl.initializer)) {
+            const func = extractArrowFunctionInfo(decl, node, sourceFile);
+            if (func) functions.push(func);
+          }
+          // Function expression: const foo = function() {}
+          if (decl.initializer && ts.isFunctionExpression(decl.initializer)) {
+            const func = extractFunctionExpressionInfo(decl, node, sourceFile);
+            if (func) functions.push(func);
+          }
+        });
+      }
+
+      // 3. Object methods: const obj = { method() {} }
+      if (ts.isVariableStatement(node)) {
+        node.declarationList.declarations.forEach(decl => {
+          if (decl.initializer && ts.isObjectLiteralExpression(decl.initializer)) {
+            const objName = decl.name.getText();
+            decl.initializer.properties.forEach(prop => {
+              if (ts.isMethodDeclaration(prop) || ts.isPropertyAssignment(prop)) {
+                const func = extractObjectMethodInfo(prop, objName, node, sourceFile);
+                if (func) functions.push(func);
+              }
+            });
+          }
+        });
+      }
+
+      // 4. Class methods
+      if (ts.isClassDeclaration(node)) {
+        const currentClassName = node.name?.getText() || 'Anonymous';
+        node.members.forEach(member => {
+          if (ts.isMethodDeclaration(member) || ts.isConstructorDeclaration(member)) {
+            const func = extractMethodInfo(member, currentClassName, sourceFile);
+            if (func) functions.push(func);
+          } else if (ts.isGetAccessorDeclaration(member)) {
+            const func = extractGetterInfo(member, currentClassName, sourceFile);
+            if (func) functions.push(func);
+          } else if (ts.isSetAccessorDeclaration(member)) {
+            const func = extractSetterInfo(member, currentClassName, sourceFile);
+            if (func) functions.push(func);
+          }
+        });
+      }
+
+      // 5. Export default function
+      if (ts.isExportAssignment(node)) {
+        if (ts.isFunctionExpression(node.expression)) {
+          const func = extractDefaultExportFunction(node.expression, sourceFile);
+          if (func) functions.push(func);
+        } else if (ts.isArrowFunction(node.expression)) {
+          const func = extractDefaultExportArrowFunction(node.expression, sourceFile);
+          if (func) functions.push(func);
+        }
+      }
+
+      ts.forEachChild(node, (child) => visit(child, className));
     }
 
-    ts.forEachChild(node, (child) => visit(child, className));
+    visit(sourceFile);
+    
+    return functions;
+  } finally {
+    // Cleanup type resolver if we created it
+    if (shouldDisposeResolver && typeResolver) {
+      typeResolver.dispose();
+      typeResolver = null;
+    }
   }
-
-  visit(sourceFile);
-  return functions;
 }
 
+/**
+ * Find project root with safeguards (uses same logic as config-loader)
+ */
 function findProjectRoot(filePath: string): string {
+  const MAX_DEPTH = 50;
+  const visited = new Set<string>();
+  
   try {
     let currentDir = path.dirname(path.resolve(filePath));
     const root = path.parse(currentDir).root;
+    let depth = 0;
     
-    while (currentDir !== root) {
+    while (currentDir !== root && depth < MAX_DEPTH) {
+      const realPath = fs.realpathSync(currentDir);
+      if (visited.has(realPath)) {
+        break;
+      }
+      visited.add(realPath);
+      
       const packageJson = path.join(currentDir, 'package.json');
       try {
         if (fs.existsSync(packageJson)) {
@@ -186,10 +258,19 @@ function findProjectRoot(filePath: string): string {
       } catch {
         // Continue searching
       }
-      currentDir = path.dirname(currentDir);
+      
+      const parentDir = path.dirname(currentDir);
+      if (parentDir === currentDir) {
+        break;
+      }
+      
+      currentDir = parentDir;
+      depth++;
     }
   } catch (error: any) {
-    // Fallback to current working directory
+    if (process.env.DEBUG) {
+      console.warn('⚠️  Error finding project root:', error.message);
+    }
   }
   
   return process.cwd();
@@ -521,14 +602,21 @@ function extractTypeInfo(typeNode: ts.TypeNode | undefined, sourceFile: ts.Sourc
   }
 
   // Use type resolver if available
-  if (typeResolver) {
+  if (typeResolver && !typeResolver.isDisposed()) {
     try {
       return typeResolver.resolveType(typeNode, sourceFile);
-    } catch {
-      // Fallback to basic parsing
+    } catch (e) {
+      if (process.env.DEBUG) {
+        console.warn('Type resolution failed, using fallback:', e);
+      }
     }
   }
 
+  // Fallback to basic type extraction
+  return fallbackExtractTypeInfo(typeNode);
+}
+
+function fallbackExtractTypeInfo(typeNode: ts.TypeNode): TypeInfo {
   const raw = typeNode.getText();
   
   // Check for union types
@@ -559,7 +647,7 @@ function extractTypeInfo(typeNode: ts.TypeNode | undefined, sourceFile: ts.Sourc
 
   // Check for tuple types
   if (ts.isTupleTypeNode(typeNode)) {
-    const tupleTypes = typeNode.elements.map(t => extractTypeInfo(t, sourceFile));
+    const tupleTypes = typeNode.elements.map(t => fallbackExtractTypeInfo(t));
     return {
       raw,
       isUnion: false,
@@ -611,18 +699,6 @@ function extractTypeInfo(typeNode: ts.TypeNode | undefined, sourceFile: ts.Sourc
     };
   }
 
-  // Check for never type
-  if (ts.isTypeReferenceNode(typeNode) && typeNode.typeName.getText() === 'never') {
-    return {
-      raw,
-      isUnion: false,
-      isGeneric: false,
-      isIntersection: false,
-      baseType: 'never',
-      isNever: true,
-    };
-  }
-
   return {
     raw,
     isUnion: false,
@@ -654,7 +730,6 @@ function extractJSDoc(node: ts.Node): string | undefined {
 }
 
 function hasModifier(node: ts.Node, kind: ts.SyntaxKind): boolean {
-  // Type assertion: nodes we check (FunctionDeclaration, VariableStatement, etc.) can have modifiers
   const modifiers = ts.getModifiers(node as ts.HasModifiers);
   return modifiers?.some(mod => mod.kind === kind) || false;
 }

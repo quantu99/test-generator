@@ -1,4 +1,4 @@
-// src/generator.ts - Enhanced generator with multiple styles
+// src/generator.ts - Enhanced generator with fixes
 import * as path from 'path';
 import { parseFile } from './parser';
 import { FunctionInfo, ParamInfo, TestConfig, TypeInfo } from './types';
@@ -112,8 +112,10 @@ function generateImports(
   let imports = '';
   
   if (exportedFuncs.length > 0 || classes.length > 0) {
-    const allImports = [...exportedFuncs, ...classes];
-    imports += `import { ${allImports.join(', ')} } from '${importPath}';\n`;
+    const allImports = [...exportedFuncs, ...classes].filter(Boolean);
+    if (allImports.length > 0) {
+      imports += `import { ${allImports.join(', ')} } from '${importPath}';\n`;
+    }
   }
 
   if (defaultExport) {
@@ -169,14 +171,19 @@ function generateTestSuite(func: FunctionInfo, config: TestConfig): string {
 }
 
 function formatParamsComment(params: ParamInfo[]): string {
+  if (params.length === 0) return 'none';
+  
   return params.map(p => {
-    if (p.isDestructured) {
-      return `{ ${p.destructuredProps?.join(', ')} }: ${p.type.raw}`;
+    if (p.isDestructured && p.destructuredProps) {
+      return `{ ${p.destructuredProps.join(', ')} }: ${p.type.raw}`;
+    }
+    if (p.isRest) {
+      return `...${p.name}: ${p.type.raw}[]`;
     }
     const optional = p.optional ? '?' : '';
     const defaultVal = p.defaultValue ? ` = ${p.defaultValue}` : '';
     return `${p.name}${optional}: ${p.type.raw}${defaultVal}`;
-  }).join(', ') || 'none';
+  }).join(', ');
 }
 
 export function generateFunctionCall(func: FunctionInfo, args: string, awaitPrefix: string): string {
@@ -189,12 +196,10 @@ export function generateFunctionCall(func: FunctionInfo, args: string, awaitPref
     return `${awaitPrefix}${func.className}.${func.name}(${args})`;
   } else if (func.kind === 'getter' && func.className) {
     // For getters, access property
-    const instanceName = func.className.charAt(0).toLowerCase() + func.className.slice(1);
-    return `${awaitPrefix}new ${func.className}().${func.name}`;
+    return `new ${func.className}().${func.name}`;
   } else if (func.kind === 'setter' && func.className) {
     // For setters, assign property
-    const instanceName = func.className.charAt(0).toLowerCase() + func.className.slice(1);
-    return `${awaitPrefix}new ${func.className}().${func.name} = ${args}`;
+    return `new ${func.className}().${func.name} = ${args}`;
   } else if (func.name.includes('.')) {
     // For object methods (obj.method)
     return `${awaitPrefix}${func.name}(${args})`;
@@ -216,7 +221,7 @@ function generateBasicTests(func: FunctionInfo, config: TestConfig): string {
   tests += `  });\n\n`;
 
   // Test 2: Edge cases
-  tests += `  it('should handle edge cases', () => {\n`;
+  tests += `  it('should handle edge cases', ${asyncPrefix}() => {\n`;
   tests += `    // TODO: Test boundary values, empty inputs, etc.\n`;
   tests += `  });\n\n`;
 
@@ -253,7 +258,7 @@ function generateStrictTests(func: FunctionInfo, config: TestConfig): string {
     tests += `    // Act\n`;
   }
   
-  const args = params.map(p => p.name).join(', ');
+  const args = generateFunctionArgs(params);
   const functionCall = generateFunctionCall(func, args, awaitPrefix);
   tests += `    const result = ${functionCall};\n\n`;
   
@@ -272,8 +277,7 @@ function generateStrictTests(func: FunctionInfo, config: TestConfig): string {
 
   // Type-specific tests
   if (returnType.isUnion && returnType.unionTypes && returnType.unionTypes.length > 1) {
-    // Generate tests for each union type case
-    returnType.unionTypes.forEach((unionType, index) => {
+    returnType.unionTypes.forEach((unionType) => {
       tests += `  it('should handle union type case: ${unionType}', ${asyncPrefix}() => {\n`;
       tests += `    // Arrange\n`;
       params.forEach(param => {
@@ -350,7 +354,7 @@ function generateBDDTests(func: FunctionInfo, config: TestConfig): string {
   tests += `  });\n\n`;
 
   tests += `  describe('GIVEN edge case inputs', () => {\n`;
-  tests += `    it('WHEN function is called THEN it should handle gracefully', () => {\n`;
+  tests += `    it('WHEN function is called THEN it should handle gracefully', ${asyncPrefix}() => {\n`;
   tests += `      // TODO: Implement edge case tests\n`;
   tests += `    });\n`;
   tests += `  });\n\n`;
@@ -376,7 +380,7 @@ function generateTestBody(func: FunctionInfo, style: string, awaitPrefix: string
 
   func.params.forEach(param => {
     if (param.isDestructured && param.destructuredProps) {
-      // Handle destructured parameters
+      // Handle destructured parameters - create proper object
       const destructuredObj: Record<string, string> = {};
       param.destructuredProps.forEach(prop => {
         destructuredObj[prop] = generateMockValueForType({ 
@@ -387,10 +391,11 @@ function generateTestBody(func: FunctionInfo, style: string, awaitPrefix: string
           baseType: 'any' 
         });
       });
-      body += `${indent}const ${param.name} = ${JSON.stringify(destructuredObj).replace(/"/g, '')};\n`;
+      body += `${indent}const ${param.name} = ${JSON.stringify(destructuredObj, null, 2).replace(/"/g, '').replace(/\n/g, '\n' + indent)};\n`;
     } else if (param.isRest) {
       // Handle rest parameters
-      body += `${indent}const ${param.name} = [${generateMockValueForType(param.type)}];\n`;
+      const mockValue = generateMockValueForType(param.type);
+      body += `${indent}const ${param.name} = [${mockValue}];\n`;
     } else {
       const mockValue = generateMockValueForType(param.type);
       body += `${indent}const ${param.name} = ${mockValue};\n`;
@@ -425,10 +430,13 @@ function generateTestBody(func: FunctionInfo, style: string, awaitPrefix: string
   return body;
 }
 
+/**
+ * FIXED: Generate proper function arguments with destructuring support
+ */
 export function generateFunctionArgs(params: ParamInfo[]): string {
   return params.map(p => {
-    if (p.isDestructured && p.destructuredProps) {
-      // For destructured params, pass the object
+    if (p.isDestructured) {
+      // For destructured params, pass the variable that holds the object
       return p.name;
     } else if (p.isRest) {
       // For rest params, spread the array
@@ -442,7 +450,7 @@ export function generateFunctionArgs(params: ParamInfo[]): string {
 export function generateMockValueForType(type: TypeInfo): string {
   // Handle never type
   if (type.isNever) {
-    return 'undefined'; // never type can't have a value
+    return 'undefined';
   }
 
   // Handle null/undefined types
@@ -555,6 +563,8 @@ export function generateMockValueForType(type: TypeInfo): string {
     'regexp': '/test/',
     'error': 'new Error("test")',
     'function': '() => {}',
+    'symbol': 'Symbol("test")',
+    'bigint': '42n',
   };
 
   // Exact match first
