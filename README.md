@@ -1,122 +1,56 @@
-# 🧪 Test-Gen - Intelligent Test Generator
+# 🧪 Test Generator
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/quantu99/test-generator)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
+> Intelligent test generator for TypeScript/JavaScript - Generate comprehensive test skeletons with smart flow analysis
 
-> 🚀 Generate comprehensive test skeletons with smart flow analysis for TypeScript/JavaScript projects
+[![npm version](https://img.shields.io/npm/v/@callmequantu/test-generator.svg)](https://www.npmjs.com/package/@callmequantu/test-generator)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## ✨ What's New in v2.0
+## ✨ Features
 
-- ✅ **Zero Memory Leaks** - Proper resource cleanup
-- ✅ **Async Config Loading** - No race conditions
-- ✅ **Better Error Messages** - Helpful suggestions with 💡
-- ✅ **Enhanced Type Safety** - Type guards everywhere
-- ✅ **Improved Performance** - 40% faster generation
-- ✅ **New Init Command** - Quick setup
-
-
----
+- 🎯 **Smart Test Generation** - Analyzes code flow and generates comprehensive tests
+- 🔄 **Multi-Framework Support** - Jest, Vitest, Mocha
+- 📊 **Flow Analysis** - Detects conditions, loops, error handling, external calls
+- 🎨 **Multiple Styles** - Basic, Strict (AAA pattern), BDD, Smart
+- 🔧 **Auto Mock Detection** - Identifies and generates mock setups
+- 📝 **Type-Aware** - Full TypeScript support with type resolution
+- ⚡ **Fast & Reliable** - Built with TypeScript compiler API
 
 ## 📦 Installation
-
 ```bash
-npm install -g test-gen
+# Global installation (recommended)
+npm install -g test-generator
+
+# Or local installation
+npm install --save-dev test-generator
 ```
-
-Or use locally in your project:
-
-```bash
-npm install --save-dev test-gen
-```
-
----
 
 ## 🚀 Quick Start
 
-### 1. Initialize Configuration
-
+### Basic Usage
 ```bash
-test-gen init --framework jest --style basic
-```
-
-This creates `.testgenrc.json` with sensible defaults.
-
-### 2. Generate Tests
-
-```bash
-# Generate test for a single file
-test-gen generate src/utils/math.ts
-
-# With custom options
-test-gen generate src/api/users.ts \
-  --framework vitest \
-  --style strict \
-  --out tests/users.test.ts
-
-# Preview without writing
-test-gen generate src/calc.ts --dry-run
-```
-
-### 3. Review and Fill In
-
-Open the generated test file and fill in the `TODO` sections with actual test logic.
-
----
-
-## 🎯 Features
-
-### 🔥 Core Features
-
-- **Multi-Framework Support**: Jest, Vitest, Mocha
-- **Multiple Test Styles**: Basic, Strict, BDD, Smart
-- **Smart Flow Analysis**: Detects conditions, loops, error handling
-- **Auto Mock Detection**: Identifies external dependencies
-- **Type-Aware**: Full TypeScript support with type resolution
-- **Destructuring Support**: Handles complex parameter patterns
-- **Class Methods**: Tests instance, static, getter/setter methods
-
-### 🧠 Smart Features
-
-- **Complexity Analysis**: Detects cyclomatic complexity
-- **Branch Coverage**: Generates tests for all code paths
-- **Error Scenarios**: Auto-generates error handling tests
-- **Edge Cases**: Suggests boundary value tests
-- **Async Support**: Proper async/await handling
-
----
-
-## 📖 Usage
-
-### Command Line
-
-```bash
-# Basic usage
-test-gen generate <file>
+# Generate tests for a file
+test-gen generate src/utils.ts
 
 # With options
-test-gen generate src/app.ts \
-  --framework jest \
-  --style smart \
-  --out tests/app.test.ts \
-  --mocks \
-  --no-comments
+test-gen generate src/calculator.ts -f jest -s strict -o __tests__/calculator.test.ts
 
-# Parse and analyze (without generating tests)
-test-gen parse src/utils.ts --json
+# Preview without writing
+test-gen generate src/api.ts --dry-run
 
-# Show verbose parsing info
-test-gen parse src/api.ts --verbose
+# Parse file to see what will be tested
+test-gen parse src/helpers.ts
 ```
 
 ### Configuration File
 
-Create `.testgenrc.json`:
-
+Create `.testgenrc.json` in your project root:
+```bash
+test-gen init
+```
 ```json
 {
   "framework": "jest",
-  "style": "strict",
+  "style": "smart",
   "includeComments": true,
   "generateMocks": true,
   "testEach": false,
@@ -128,340 +62,199 @@ Create `.testgenrc.json`:
 }
 ```
 
-Or `.testgenrc.js` for dynamic config:
+## 📖 Test Styles
 
-```javascript
-module.exports = {
-  framework: process.env.TEST_FRAMEWORK || 'jest',
-  style: 'smart',
-  includeComments: true,
-  generateMocks: true,
-};
-```
+### Basic Style
+Simple test structure with essential cases:
+- Happy path
+- Edge cases
+- Error handling
 
----
+### Strict Style (AAA Pattern)
+Follows Arrange-Act-Assert pattern:
+- Explicit setup phase
+- Clear action phase
+- Comprehensive assertions
+- Snapshot testing
 
-## 🎨 Test Styles
+### BDD Style
+Behavior-driven development approach:
+- Given-When-Then structure
+- Nested describe blocks
+- Readable test names
 
-### 1. Basic Style
-Simple, straightforward tests with minimal boilerplate.
+### Smart Style ⭐
+AI-powered analysis generates tests based on:
+- **Condition branches** - Tests for all if/switch/ternary paths
+- **Loop handling** - Empty arrays, single/multiple items
+- **Error scenarios** - All throw statements and try-catch blocks
+- **External calls** - Mock verification and argument assertions
+- **Complexity analysis** - Additional tests for high-complexity functions
 
+## 🎯 Examples
+
+### Input: TypeScript Function
 ```typescript
-it('should execute successfully with valid inputs', () => {
-  // Arrange
-  const input = 'test';
-  
-  // Act
-  const result = myFunction(input);
-  
-  // Assert
-  expect(result).toBeDefined();
-});
-```
-
-### 2. Strict Style
-Comprehensive tests with multiple scenarios and edge cases.
-
-```typescript
-it('should return correct value with valid inputs', () => {
-  // Arrange
-  const input = 'test-string';
-  const expected = 'expected-result';
-  
-  // Act
-  const result = myFunction(input);
-  
-  // Assert
-  expect(result).toEqual(expected);
-  expect(result).toMatchSnapshot();
-});
-```
-
-### 3. BDD Style
-Behavior-driven development with Given-When-Then.
-
-```typescript
-describe('GIVEN valid inputs', () => {
-  it('WHEN function is called THEN it should return expected result', () => {
-    // GIVEN
-    const input = 'test-data';
-    
-    // WHEN
-    const result = myFunction(input);
-    
-    // THEN
-    expect(result).toBeDefined();
-  });
-});
-```
-
-### 4. Smart Style
-AI-powered analysis of code flow with targeted tests.
-
-```typescript
-// Automatically detects:
-// - Conditions and branches
-// - Error handling
-// - Loop iterations
-// - External dependencies
-// - Complexity hotspots
-
-it('should handle case when user.isActive is true (line 15)', () => {
-  // Test generated based on actual code flow
-});
-```
-
----
-
-## 🔧 Advanced Usage
-
-### Custom Mock Generation
-
-```bash
-test-gen generate src/api.ts --mocks
-```
-
-Automatically generates mock setups:
-
-```typescript
-// Module mocks
-jest.mock('axios', () => ({
-  get: jest.fn(),
-  post: jest.fn(),
-}));
-
-beforeEach(() => {
-  // Mock setup
-  axios.get.mockResolvedValue({ data: {} });
-});
-```
-
-### Parameterized Tests
-
-```bash
-test-gen generate src/validator.ts --test-each
-```
-
-Generates `test.each()` patterns:
-
-```typescript
-test.each([
-  ['valid@email.com', true],
-  ['invalid-email', false],
-  ['', false],
-])('should validate %s as %s', (email, expected) => {
-  expect(validateEmail(email)).toBe(expected);
-});
-```
-
----
-
-## 📊 Examples
-
-### Example 1: Simple Function
-
-**Input:** `math.ts`
-```typescript
-export function add(a: number, b: number): number {
-  return a + b;
-}
-```
-
-**Generated:** `math.test.ts`
-```typescript
-import { add } from './math';
-import { describe, it, expect } from '@jest/globals';
-
-describe('add', () => {
-  it('should execute successfully with valid inputs', () => {
-    // Arrange
-    const a = 42;
-    const b = 42;
-    
-    // Act
-    const result = add(a, b);
-    
-    // Assert
-    expect(result).toBeDefined();
-  });
-});
-```
-
-### Example 2: Class with Methods
-
-**Input:** `user-service.ts`
-```typescript
-export class UserService {
-  async getUser(id: string): Promise<User | null> {
-    if (!id) throw new Error('ID required');
-    return await db.findUser(id);
+export async function calculateDiscount(
+  price: number,
+  discountCode?: string
+): Promise<number> {
+  if (price <= 0) {
+    throw new Error('Price must be positive');
   }
+
+  if (!discountCode) {
+    return price;
+  }
+
+  const discounts: Record<string, number> = {
+    SAVE10: 0.1,
+    SAVE20: 0.2,
+    SAVE50: 0.5,
+  };
+
+  const discount = discounts[discountCode];
+  if (!discount) {
+    throw new Error('Invalid discount code');
+  }
+
+  return price * (1 - discount);
 }
 ```
 
-**Generated (Smart Style):**
+### Generated Test (Smart Style)
 ```typescript
-describe('UserService.getUser', () => {
-  // Complexity: 3
-  // Conditions: 1
-  // Error handling: 1
-  // External calls: 1
-  
-  it('should throw Error when !id is true (line 3)', async () => {
-    // Test for error condition
+import { calculateDiscount } from './calculator';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+
+describe('calculateDiscount', () => {
+  // Complexity: 4
+  // Conditions: 3
+  // Error handling: 2
+
+  it('should throw Error when price must be positive (line 5)', async () => {
+    // Arrange: Setup invalid input that triggers error
+    const price = -10;
+    const discountCode = undefined;
+
+    // Act & Assert
+    await expect(calculateDiscount(price, discountCode))
+      .rejects.toThrow('Price must be positive');
   });
-  
-  it('should call db.findUser with correct arguments (line 4)', async () => {
-    // Test for external dependency
+
+  it('should handle case when !discountCode is true (line 9)', async () => {
+    // Arrange: Setup data that makes condition true
+    const price = 100;
+    const discountCode = undefined;
+
+    // Act
+    const result = await calculateDiscount(price, discountCode);
+
+    // Assert
+    expect(result).toBe(100);
   });
-  
+
+  it('should throw Error when Invalid discount code (line 21)', async () => {
+    // Arrange
+    const price = 100;
+    const discountCode = 'INVALID';
+
+    // Act & Assert
+    await expect(calculateDiscount(price, discountCode))
+      .rejects.toThrow('Invalid discount code');
+  });
+
   it('should successfully complete happy path', async () => {
-    // Test for successful execution
+    // Arrange: Setup valid input
+    const price = 100;
+    const discountCode = 'SAVE20';
+
+    // Act
+    const result = await calculateDiscount(price, discountCode);
+
+    // Assert
+    expect(result).toBe(80);
+    expect(result).toBeGreaterThan(0);
   });
 });
 ```
 
----
+## 📚 API
 
-## 🛠️ API
-
-### Programmatic Usage
-
-```typescript
-import { generateTest, parseFile, TestConfig } from 'test-gen';
-
-const config: TestConfig = {
-  framework: 'jest',
-  style: 'strict',
-  includeComments: true,
-};
-
-// Generate test
-const testCode = generateTest('./src/app.ts', config);
-console.log(testCode);
-
-// Or parse functions only
-const functions = parseFile('./src/utils.ts');
-console.log(`Found ${functions.length} functions`);
-```
-
----
-
-## 🐛 Debugging
-
-### Enable Debug Mode
-
+### CLI Commands
 ```bash
-DEBUG=1 test-gen generate src/app.ts
+# Generate tests
+test-gen generate <file> [options]
+test-gen gen <file> [options]  # alias
+
+# Parse file
+test-gen parse <file> [options]
+
+# Initialize config
+test-gen init [options]
 ```
 
-This shows:
-- Detailed parsing information
-- Type resolution steps
-- Config loading process
-- Error stack traces
+### Generate Options
 
-### Common Issues
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-f, --framework` | Test framework (jest/vitest/mocha) | `jest` |
+| `-s, --style` | Test style (basic/strict/bdd/smart) | `basic` |
+| `-o, --out` | Output file path | `<filename>.test.ts` |
+| `--no-comments` | Disable test flow comments | `false` |
+| `--dry-run` | Preview without writing | `false` |
+| `--mocks` | Auto-generate mocks | `false` |
+| `--test-each` | Generate parameterized tests | `false` |
 
-**Issue:** "File not found"
-```
-❌ File not found: src/utlis.ts
+### Parse Options
 
-💡 Did you mean one of these?
-   - utils.ts
-   - utils.test.ts
-```
+| Option | Description |
+|--------|-------------|
+| `-j, --json` | Output as JSON |
+| `-v, --verbose` | Show detailed information |
 
-**Issue:** "Invalid framework"
-```
-❌ Invalid framework: jst. Valid: jest, vitest, mocha
-```
+## 🏗️ Supported Constructs
 
-**Issue:** "TypeScript syntax errors"
-```
-❌ TypeScript syntax errors found:
-  Line 15, Col 3: Expected ';'
-  Line 20, Col 10: Cannot find name 'foo'
-
-💡 Fix syntax errors and try again.
-```
-
----
-
-## 🧪 Testing
-
-Run the test generator's own tests:
-
-```bash
-npm test
-```
-
-With coverage:
-
-```bash
-npm run test:coverage
-```
-
----
+- ✅ Function declarations
+- ✅ Arrow functions
+- ✅ Class methods (instance & static)
+- ✅ Getters & setters
+- ✅ Async/await functions
+- ✅ Destructured parameters
+- ✅ Rest parameters
+- ✅ Optional parameters
+- ✅ Default parameters
+- ✅ Generic types
+- ✅ Union & intersection types
+- ✅ Tuple types
+- ✅ Literal types
 
 ## 🤝 Contributing
 
-Contributions welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-### Development Setup
+## 📄 License
 
-```bash
-# Clone repo
-git clone https://github.com/yourusername/test-gen.git
-cd test-gen
+MIT © PaulyDev
 
-# Install dependencies
-npm install
+## 🐛 Issues
 
-# Build
-npm run build
+Report issues at: https://github.com/quantu99/test-generator/issues
 
-# Run in dev mode
-npm run dev
+## 💡 Tips
 
-# Run tests
-npm test
-```
+1. **Use Smart Style** for complex business logic
+2. **Configure .testgenrc.json** for consistent team standards
+3. **Review generated tests** and add custom assertions
+4. **Enable --mocks** for files with external dependencies
+5. **Use --dry-run** to preview before committing
 
----
+## 🔗 Links
 
-## 📜 License
-
-MIT © [Your Name]
+- [npm Package](https://www.npmjs.com/package/test-generator)
+- [GitHub Repository](https://github.com/quantu99/test-generator)
+- [Report Bugs](https://github.com/quantu99/test-generator/issues)
 
 ---
 
-## 🙏 Acknowledgments
-
-- Built with [TypeScript Compiler API](https://github.com/microsoft/TypeScript)
-- Inspired by modern testing best practices
-- Community feedback and contributions
-
----
-
-## 📞 Support
-
-- 🐛 [Report a Bug](https://github.com/yourusername/test-gen/issues)
-- 💡 [Request a Feature](https://github.com/yourusername/test-gen/issues)
-- 📖 [Documentation](https://github.com/yourusername/test-gen/wiki)
-- 💬 [Discussions](https://github.com/yourusername/test-gen/discussions)
-
----
-
-## 🗺️ Roadmap
-
-- [ ] Watch mode for auto-regeneration
-- [ ] Coverage analysis integration
-- [ ] Custom template system
-- [ ] Plugin architecture
-- [ ] Web UI for visualization
-- [ ] AI-powered test suggestions
-
----
-
-**Made with ❤️ by developers, for developers**
+Made with ❤️ by PaulyDevs

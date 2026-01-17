@@ -564,7 +564,7 @@ function extractParams(
     let destructuredProps: string[] | undefined;
     
     if (ts.isObjectBindingPattern(param.name)) {
-      const bindingPattern = param.name as ts.ObjectBindingPattern;
+      const bindingPattern = param.name;
       destructuredProps = bindingPattern.elements.map(el => {
         if (ts.isBindingElement(el)) {
           return el.name?.getText() || '';
@@ -572,7 +572,7 @@ function extractParams(
         return '';
       }).filter(Boolean);
     } else if (ts.isArrayBindingPattern(param.name)) {
-      const bindingPattern = param.name as ts.ArrayBindingPattern;
+      const bindingPattern = param.name;
       destructuredProps = bindingPattern.elements.map(el => {
         if (ts.isBindingElement(el)) {
           return el.name?.getText() || '';

@@ -1,0 +1,640 @@
+﻿
+> test-generator@2.0.0 test
+> jest --verbose
+
+npm : PASS __tests__/flo
+w-analyzer.test.ts 
+(16.297 s)
+At line:1 char:1
++ npm test -- --verbose 
+2>&1 | Out-File 
+-FilePath 
+test-output.txt -Enco 
+...
++ ~~~~~~~~~~~~~~~~~~~~~~
+~~~~
+    + CategoryInfo      
+        : NotSpeci    
+fied: (PASS __tes    
+ts__/...t.ts (16.    
+297 s):String) []    , 
+RemoteException
+    + FullyQualifiedE   
+ rrorId : NativeCo    
+mmandError
+ 
+  flow-analyzer
+    analyzeBusinessFlow
+      ΓêÜ should detect 
+if statements (116 ms)
+      ΓêÜ should detect 
+switch statements (9 ms)
+      ΓêÜ should detect 
+ternary operators (48 
+ms)
+      ΓêÜ should detect 
+loops (50 ms)
+      ΓêÜ should detect 
+array methods (8 ms)
+      ΓêÜ should detect 
+throw statements (37 ms)
+      ΓêÜ should detect 
+try-catch blocks (6 ms)
+      ΓêÜ should detect 
+external function calls 
+(4 ms)
+      ΓêÜ should detect 
+return statements (2 ms)
+      ΓêÜ should 
+calculate complexity 
+correctly (3 ms)
+      ΓêÜ should handle 
+empty functions (3 ms)
+      ΓêÜ should handle 
+functions with no 
+conditions (3 ms)
+
+C:\Users\DELL OS\Desktop
+\test-gen\src\config-loa
+der.ts:74
+                        
+throw new 
+ConfigError(`Invalid 
+JSON in config file: 
+${parseError.message}`, 
+configPath);
+                        
+      ^
+
+ConfigError: Invalid 
+JSON in config file: 
+Expected property name 
+or '}' in JSON at 
+position 2
+    at loadConfig 
+(C:\Users\DELL OS\Deskto
+p\test-gen\src\config-lo
+ader.ts:74:31)
+    at 
+Object.<anonymous> 
+(C:\Users\DELL OS\Deskto
+p\test-gen\__tests__\con
+fig-loader.test.ts:54:32
+)
+    at 
+Promise.then.completed 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\utils.
+js:298:28)
+    at new Promise 
+(<anonymous>)
+    at 
+callAsyncCircusFn 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\utils.
+js:231:10)
+    at _callCircusTest 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\run.js
+:316:40)
+    at processTicksAndRe
+jections (node:internal/
+process/task_queues:95:5
+)
+    at _runTest 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\run.js
+:252:3)
+    at _runTestsForDescr
+ibeBlock (C:\Users\DELL 
+OS\Desktop\test-gen\node
+_modules\jest-circus\bui
+ld\run.js:126:9)
+    at _runTestsForDescr
+ibeBlock (C:\Users\DELL 
+OS\Desktop\test-gen\node
+_modules\jest-circus\bui
+ld\run.js:121:9)
+    at _runTestsForDescr
+ibeBlock (C:\Users\DELL 
+OS\Desktop\test-gen\node
+_modules\jest-circus\bui
+ld\run.js:121:9)
+    at run 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\run.js
+:71:3)
+    at runAndTransformRe
+sultsToJestFormat 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\legacy
+-code-todo-rewrite\jestA
+dapterInit.js:122:21)
+    at jestAdapter 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\legacy
+-code-todo-rewrite\jestA
+dapter.js:79:19)
+    at runTestInternal 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-runner\build\runTes
+t.js:367:16)
+    at runTest 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-runner\build\runTes
+t.js:444:34)
+    at Object.worker 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-runner\build\testWo
+rker.js:106:12) {
+  configPath: 'C:\\Users
+\\DELLOS~1\\AppData\\Loc
+al\\Temp\\test-gen-QSKjj
+j\\.testgenrc.json'
+}
+
+Node.js v20.18.3
+C:\Users\DELL OS\Desktop
+\test-gen\src\config-loa
+der.ts:74
+                        
+throw new 
+ConfigError(`Invalid 
+JSON in config file: 
+${parseError.message}`, 
+configPath);
+                        
+      ^
+
+ConfigError: Invalid 
+JSON in config file: 
+Expected property name 
+or '}' in JSON at 
+position 2
+    at loadConfig 
+(C:\Users\DELL OS\Deskto
+p\test-gen\src\config-lo
+ader.ts:74:31)
+    at 
+Object.<anonymous> 
+(C:\Users\DELL OS\Deskto
+p\test-gen\__tests__\con
+fig-loader.test.ts:54:32
+)
+    at 
+Promise.then.completed 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\utils.
+js:298:28)
+    at new Promise 
+(<anonymous>)
+    at 
+callAsyncCircusFn 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\utils.
+js:231:10)
+    at _callCircusTest 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\run.js
+:316:40)
+    at processTicksAndRe
+jections (node:internal/
+process/task_queues:95:5
+)
+    at _runTest 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\run.js
+:252:3)
+    at _runTestsForDescr
+ibeBlock (C:\Users\DELL 
+OS\Desktop\test-gen\node
+_modules\jest-circus\bui
+ld\run.js:126:9)
+    at _runTestsForDescr
+ibeBlock (C:\Users\DELL 
+OS\Desktop\test-gen\node
+_modules\jest-circus\bui
+ld\run.js:121:9)
+    at _runTestsForDescr
+ibeBlock (C:\Users\DELL 
+OS\Desktop\test-gen\node
+_modules\jest-circus\bui
+ld\run.js:121:9)
+    at run 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\run.js
+:71:3)
+    at runAndTransformRe
+sultsToJestFormat 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\legacy
+-code-todo-rewrite\jestA
+dapterInit.js:122:21)
+    at jestAdapter 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\legacy
+-code-todo-rewrite\jestA
+dapter.js:79:19)
+    at runTestInternal 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-runner\build\runTes
+t.js:367:16)
+    at runTest 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-runner\build\runTes
+t.js:444:34)
+    at Object.worker 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-runner\build\testWo
+rker.js:106:12) {
+  configPath: 'C:\\Users
+\\DELLOS~1\\AppData\\Loc
+al\\Temp\\test-gen-ATeUa
+x\\.testgenrc.json'
+}
+
+Node.js v20.18.3
+C:\Users\DELL OS\Desktop
+\test-gen\src\config-loa
+der.ts:74
+                        
+throw new 
+ConfigError(`Invalid 
+JSON in config file: 
+${parseError.message}`, 
+configPath);
+                        
+      ^
+
+ConfigError: Invalid 
+JSON in config file: 
+Expected property name 
+or '}' in JSON at 
+position 2
+    at loadConfig 
+(C:\Users\DELL OS\Deskto
+p\test-gen\src\config-lo
+ader.ts:74:31)
+    at 
+Object.<anonymous> 
+(C:\Users\DELL OS\Deskto
+p\test-gen\__tests__\con
+fig-loader.test.ts:54:32
+)
+    at 
+Promise.then.completed 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\utils.
+js:298:28)
+    at new Promise 
+(<anonymous>)
+    at 
+callAsyncCircusFn 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\utils.
+js:231:10)
+    at _callCircusTest 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\run.js
+:316:40)
+    at processTicksAndRe
+jections (node:internal/
+process/task_queues:95:5
+)
+    at _runTest 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\run.js
+:252:3)
+    at _runTestsForDescr
+ibeBlock (C:\Users\DELL 
+OS\Desktop\test-gen\node
+_modules\jest-circus\bui
+ld\run.js:126:9)
+    at _runTestsForDescr
+ibeBlock (C:\Users\DELL 
+OS\Desktop\test-gen\node
+_modules\jest-circus\bui
+ld\run.js:121:9)
+    at _runTestsForDescr
+ibeBlock (C:\Users\DELL 
+OS\Desktop\test-gen\node
+_modules\jest-circus\bui
+ld\run.js:121:9)
+    at run 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\run.js
+:71:3)
+    at runAndTransformRe
+sultsToJestFormat 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\legacy
+-code-todo-rewrite\jestA
+dapterInit.js:122:21)
+    at jestAdapter 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\legacy
+-code-todo-rewrite\jestA
+dapter.js:79:19)
+    at runTestInternal 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-runner\build\runTes
+t.js:367:16)
+    at runTest 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-runner\build\runTes
+t.js:444:34)
+    at Object.worker 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-runner\build\testWo
+rker.js:106:12) {
+  configPath: 'C:\\Users
+\\DELLOS~1\\AppData\\Loc
+al\\Temp\\test-gen-s86Io
+w\\.testgenrc.json'
+}
+
+Node.js v20.18.3
+C:\Users\DELL OS\Desktop
+\test-gen\src\config-loa
+der.ts:74
+                        
+throw new 
+ConfigError(`Invalid 
+JSON in config file: 
+${parseError.message}`, 
+configPath);
+                        
+      ^
+
+ConfigError: Invalid 
+JSON in config file: 
+Expected property name 
+or '}' in JSON at 
+position 2
+    at loadConfig 
+(C:\Users\DELL OS\Deskto
+p\test-gen\src\config-lo
+ader.ts:74:31)
+    at 
+Object.<anonymous> 
+(C:\Users\DELL OS\Deskto
+p\test-gen\__tests__\con
+fig-loader.test.ts:54:32
+)
+    at 
+Promise.then.completed 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\utils.
+js:298:28)
+    at new Promise 
+(<anonymous>)
+    at 
+callAsyncCircusFn 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\utils.
+js:231:10)
+    at _callCircusTest 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\run.js
+:316:40)
+    at processTicksAndRe
+jections (node:internal/
+process/task_queues:95:5
+)
+    at _runTest 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\run.js
+:252:3)
+    at _runTestsForDescr
+ibeBlock (C:\Users\DELL 
+OS\Desktop\test-gen\node
+_modules\jest-circus\bui
+ld\run.js:126:9)
+    at _runTestsForDescr
+ibeBlock (C:\Users\DELL 
+OS\Desktop\test-gen\node
+_modules\jest-circus\bui
+ld\run.js:121:9)
+    at _runTestsForDescr
+ibeBlock (C:\Users\DELL 
+OS\Desktop\test-gen\node
+_modules\jest-circus\bui
+ld\run.js:121:9)
+    at run 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\run.js
+:71:3)
+    at runAndTransformRe
+sultsToJestFormat 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\legacy
+-code-todo-rewrite\jestA
+dapterInit.js:122:21)
+    at jestAdapter 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-circus\build\legacy
+-code-todo-rewrite\jestA
+dapter.js:79:19)
+    at runTestInternal 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-runner\build\runTes
+t.js:367:16)
+    at runTest 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-runner\build\runTes
+t.js:444:34)
+    at Object.worker 
+(C:\Users\DELL OS\Deskto
+p\test-gen\node_modules\
+jest-runner\build\testWo
+rker.js:106:12) {
+  configPath: 'C:\\Users
+\\DELLOS~1\\AppData\\Loc
+al\\Temp\\test-gen-mTutn
+U\\.testgenrc.json'
+}
+
+Node.js v20.18.3
+FAIL __tests__/config-lo
+ader.test.ts
+  ΓùÅ Test suite failed 
+to run
+
+    Jest worker 
+encountered 4 child 
+process exceptions, 
+exceeding retry limit
+
+      at ChildProcessWor
+ker.initialize (node_mod
+ules/jest-runner/node_mo
+dules/jest-worker/build/
+workers/ChildProcessWork
+er.js:181:21)
+
+PASS __tests__/generator
+.test.ts (64.52 s)
+  generator
+    generateTest
+      ΓêÜ should 
+generate basic test 
+structure (14361 ms)
+      ΓêÜ should 
+generate strict test 
+structure (7833 ms)
+      ΓêÜ should 
+generate BDD test 
+structure (8304 ms)
+      ΓêÜ should 
+generate tests without 
+comments when disabled 
+(5400 ms)
+      ΓêÜ should 
+generate vitest imports 
+(4285 ms)
+      ΓêÜ should handle 
+async functions (3246 
+ms)
+      ΓêÜ should 
+generate tests for 
+union types (2850 ms)
+      ΓêÜ should handle 
+optional parameters 
+(2785 ms)
+    generateFunctionCall
+      ΓêÜ should 
+generate call for 
+regular function (1 ms)
+      ΓêÜ should 
+generate call for async 
+function (1 ms)
+      ΓêÜ should 
+generate call for class 
+method (3 ms)
+      ΓêÜ should 
+generate call for 
+static method (1 ms)
+    
+generateMockValueForType
+      ΓêÜ should 
+generate mock for 
+string type (1 ms)
+      ΓêÜ should 
+generate mock for 
+number type (2 ms)
+      ΓêÜ should 
+generate mock for 
+boolean type (1 ms)
+      ΓêÜ should 
+generate mock for array 
+type (1 ms)
+      ΓêÜ should 
+generate mock for 
+Promise type (2 ms)
+      ΓêÜ should 
+generate mock for union 
+type (1 ms)
+      ΓêÜ should 
+generate mock for void 
+type (1 ms)
+      ΓêÜ should 
+generate mock for never 
+type (1 ms)
+      ΓêÜ should 
+generate mock for 
+literal type (1 ms)
+
+PASS __tests__/parser.te
+st.ts (78.407 s)
+  parser
+    parseFile
+      ΓêÜ should parse 
+function declarations 
+(15063 ms)
+      ΓêÜ should parse 
+arrow functions (7135 
+ms)
+      ΓêÜ should parse 
+async functions (8513 
+ms)
+      ΓêÜ should parse 
+class methods (6441 ms)
+      ΓêÜ should parse 
+getters and setters 
+(3009 ms)
+      ΓêÜ should parse 
+destructured parameters 
+(3043 ms)
+      ΓêÜ should parse 
+optional parameters 
+(2926 ms)
+      ΓêÜ should parse 
+parameters with default 
+values (2673 ms)
+      ΓêÜ should parse 
+rest parameters (2565 
+ms)
+      ΓêÜ should parse 
+union types (2123 ms)
+      ΓêÜ should parse 
+generic types (2311 ms)
+      ΓêÜ should handle 
+empty files (4 ms)
+      ΓêÜ should handle 
+files with only 
+comments (2290 ms)
+      ΓêÜ should parse 
+default exports (2095 
+ms)
+      ΓêÜ should handle 
+object methods (2103 ms)
+      ΓêÜ should throw 
+error for non-existent 
+file (41 ms)
+
+Test Suites: 1 failed, 
+3 passed, 4 total
+Tests:       49 passed, 
+49 total
+Snapshots:   0 total
+Time:        80.417 s
+Ran all test suites.

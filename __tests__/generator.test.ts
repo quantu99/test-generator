@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { generateTest, generateFunctionCall, generateMockValueForType } from '../src/generator';
+import {
+  generateTest,
+  generateFunctionCall,
+  generateMockValueForType,
+} from '../src/generator';
 import { createTempFile, cleanupTempFile } from './test-utils';
 import { FunctionInfo, TypeInfo } from '../src/types';
 
@@ -128,7 +132,7 @@ describe('generator', () => {
         includeComments: true,
       });
 
-      expect(testCode).toContain('union type');
+      expect(testCode).toContain('Parameters: value: string | number');
     });
 
     it('should handle optional parameters', () => {
@@ -153,7 +157,13 @@ describe('generator', () => {
       const func: FunctionInfo = {
         name: 'add',
         params: [],
-        returnType: { raw: 'number', isUnion: false, isGeneric: false, isIntersection: false, baseType: 'number' },
+        returnType: {
+          raw: 'number',
+          isUnion: false,
+          isGeneric: false,
+          isIntersection: false,
+          baseType: 'number',
+        },
         isAsync: false,
         isExported: true,
         isDefaultExport: false,
@@ -168,7 +178,13 @@ describe('generator', () => {
       const func: FunctionInfo = {
         name: 'fetchData',
         params: [],
-        returnType: { raw: 'Promise<string>', isUnion: false, isGeneric: false, isIntersection: false, baseType: 'Promise' },
+        returnType: {
+          raw: 'Promise<string>',
+          isUnion: false,
+          isGeneric: false,
+          isIntersection: false,
+          baseType: 'Promise',
+        },
         isAsync: true,
         isExported: true,
         isDefaultExport: false,
@@ -183,7 +199,13 @@ describe('generator', () => {
       const func: FunctionInfo = {
         name: 'calculate',
         params: [],
-        returnType: { raw: 'number', isUnion: false, isGeneric: false, isIntersection: false, baseType: 'number' },
+        returnType: {
+          raw: 'number',
+          isUnion: false,
+          isGeneric: false,
+          isIntersection: false,
+          baseType: 'number',
+        },
         isAsync: false,
         isExported: true,
         isDefaultExport: false,
@@ -200,7 +222,13 @@ describe('generator', () => {
       const func: FunctionInfo = {
         name: 'multiply',
         params: [],
-        returnType: { raw: 'number', isUnion: false, isGeneric: false, isIntersection: false, baseType: 'number' },
+        returnType: {
+          raw: 'number',
+          isUnion: false,
+          isGeneric: false,
+          isIntersection: false,
+          baseType: 'number',
+        },
         isAsync: false,
         isExported: true,
         isDefaultExport: false,

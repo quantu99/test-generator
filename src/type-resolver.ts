@@ -183,7 +183,7 @@ export class TypeResolver {
       }
 
       // Handle tuple types
-      if (this.checker!.isTupleType(type)) {
+      if (this.checker.isTupleType(type)) {
         const tupleType = type as ts.TupleType;
         let elementTypes: ts.Type[] = [];
         
@@ -282,7 +282,7 @@ export class TypeResolver {
           isUnion: false,
           isGeneric: false,
           isIntersection: false,
-          baseType: this.checker!.typeToString(type),
+          baseType: this.checker.typeToString(type),
         };
       } catch (error: any) {
         // Fallback if typeToString fails

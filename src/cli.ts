@@ -1,4 +1,4 @@
-// src/cli.ts - Enhanced CLI with fixes
+#!/usr/bin/env node
 import { Command } from 'commander';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -96,8 +96,8 @@ program
       
       // Merge with CLI options
       const config: TestConfig = mergeConfigs(projectConfig, {
-        framework: options.framework as any,
-        style: options.style as any,
+        framework: options.framework,
+        style: options.style,
         includeComments: options.comments,
         outputPath: options.out,
         generateMocks: options.mocks,

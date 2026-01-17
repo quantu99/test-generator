@@ -20,12 +20,12 @@ describe('config-loader', () => {
   });
 
   describe('loadConfig', () => {
-    it('should return empty object when no config file exists', () => {
-      const config = loadConfig(tempDir);
+    it('should return empty object when no config file exists', async () => {
+      const config = await loadConfig(tempDir);
       expect(config).toEqual({});
     });
 
-    it('should load config from .testgenrc.json', () => {
+    it('should load config from .testgenrc.json', async () => {
       const configContent = {
         framework: 'vitest' as const,
         style: 'strict' as const,
@@ -37,25 +37,24 @@ describe('config-loader', () => {
         'utf-8'
       );
 
-      const config = loadConfig(tempDir);
+      const config = await loadConfig(tempDir);
       expect(config.framework).toBe('vitest');
       expect(config.style).toBe('strict');
       expect(config.includeComments).toBe(false);
     });
 
-    it('should handle invalid JSON gracefully', () => {
+    it('should handle invalid JSON gracefully', async () => {
       fs.writeFileSync(
         path.join(tempDir, '.testgenrc.json'),
         '{ invalid json }',
         'utf-8'
       );
 
-      // Should not throw, but return empty config or handle error
-      const config = loadConfig(tempDir);
-      expect(config).toBeDefined();
+      // Should throw ConfigError for invalid JSON
+      await expect(loadConfig(tempDir)).rejects.toThrow('Invalid JSON in config file');
     });
 
-    it('should prioritize .testgenrc.json over other config files', () => {
+    it('should prioritize .testgenrc.json over other config files', async () => {
       const jsonConfig = { framework: 'jest' };
       const jsConfig = { framework: 'vitest' };
 
@@ -70,7 +69,7 @@ describe('config-loader', () => {
         'utf-8'
       );
 
-      const config = loadConfig(tempDir);
+      const config = await loadConfig(tempDir);
       expect(config.framework).toBe('jest');
     });
   });
